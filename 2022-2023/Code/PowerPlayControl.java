@@ -50,10 +50,12 @@ public class PowerPlayControl extends LinearOpMode {
     private DcMotor backRight;
     private DcMotor frontLeft;
     private DcMotor frontRight;
-    private DcMotor pully;
+    private DcMotor pulley;
     private Servo claw;
-    private Servo pivot;
-
+    
+    double drivePower = 0.7;
+    double pullyPower = 0.3;
+    
     @Override
     public void runOpMode() {
         expansion_Hub_1 = hardwareMap.get(Blinker.class, "Expansion Hub 1");
@@ -64,9 +66,8 @@ public class PowerPlayControl extends LinearOpMode {
         frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
         frontRight = hardwareMap.get(DcMotor.class, "frontRight");
         
-        pully = hardwareMap.get(DcMotor.class, "pully");
+        pulley = hardwareMap.get(DcMotor.class, "pulley");
         claw = hardwareMap.get(Servo.class, "claw");
-        pivot = hardwareMap.get(Servo.class, "pivot");
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -79,9 +80,6 @@ public class PowerPlayControl extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             telemetry.addData("Status", "Running");
-            telemetry.update();
-
-
 
             double y = -gamepad1.left_stick_y; // Remember, this is reversed!
             double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
@@ -96,38 +94,30 @@ public class PowerPlayControl extends LinearOpMode {
             double frontRightPower = (y - x - rx) / denominator;
             double backRightPower = (y + x - rx) / denominator;
 
-            frontLeft.setPower(frontLeftPower);
-            backLeft.setPower(backLeftPower);
-            frontRight.setPower(frontRightPower);
-            backRight.setPower(backRightPower);
+            frontLeft.setPower(frontLeftPower*drivePower);
+            backLeft.setPower(backLeftPower*drivePower);
+            frontRight.setPower(frontRightPower*drivePower);
+            backRight.setPower(backRightPower*drivePower);
             
             
             
-            if (this.gamepad1.dpad_down) { //Need "this"?
-                pully.setPower(1);
+            if (this.gamepad1.left_bumper) { //Need "this"?
+                pulley.setPower(pullyPower);
                 telemetry.addData("Pully moving", "Down");
-            } else if (this.gamepad1.dpad_up){
-                pully.setPower(-1);
+            } else if (this.gamepad1.right_bumper){
+                pulley.setPower(-pullyPower);
                 telemetry.addData("Pully moving", "Up");
             } else {
-                pully.setPower(0);
+                pulley.setPower(0);
                 telemetry.addData("Pully moving", "Stopped");
             }
             
-            if (this.gamepad1.left_bumper) {
+            if (this.gamepad1.right_trigger > 0.0) {
                 claw.setPosition(1.0);
                 telemetry.addData("Claw", "Open");
-            } else if (this.gamepad1.right_bumper) {
+            } else if (this.gamepad1.left_trigger > 0.0) {
                 claw.setPosition(0.0);
                 telemetry.addData("Claw", "Closed");
-            }
-            
-            if(this.gamepad1.a) {
-                pivot.setPosition(1.0);
-                telemetry.addData("Pivot", "Up");
-            } else if (this.gamepad1.b) {
-                pivot.setPosition(0.0);
-                telemetry.addData("Pivot", "Down");
             }
             
             telemetry.update();
