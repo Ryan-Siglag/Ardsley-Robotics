@@ -20,7 +20,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.Gyroscope;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.Blinker;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -28,6 +27,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.Gyroscope;
+
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -41,20 +42,24 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove a @Disabled the on the next line or two (if present) to add this opmode to the Driver Station OpMode list,
  * or add a @Disabled annotation to prevent this OpMode from being added to the Driver Station
  */
-@TeleOp
+@Autonomous
 
-public class PowerPlayControl extends LinearOpMode {
+public class PowerPlayAutoTicks extends LinearOpMode {
     private Blinker control_Hub;
     private Blinker expansion_Hub;
-    private DcMotor backLeft; //e
-    private DcMotor backRight; //e
-    private DcMotor frontLeft; //e
-    private DcMotor frontRight; //e
-    private DcMotor armPitch; //c
-    private Servo thumb; //c
+    private DcMotor backLeft;
+    private DcMotor backRight;
+    private DcMotor frontLeft;
+    private DcMotor frontRight;
+    //private DcMotor armPitch;
+    //private Servo thumb;
     
-    double drivePower = 0.7;
-    double pitchPower = 0.3;
+    static final double     COUNTS_PER_MOTOR_REV    = 1680.0; 
+    static final double     DRIVE_GEAR_REDUCTION    = 60;   
+    static final double     WHEEL_CIRCUMFERENCE_MM  = 75 * 3.14;
+    
+    static final double     COUNTS_PER_WHEEL_REV    = COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION;
+    static final double     COUNTS_PER_MM           = COUNTS_PER_WHEEL_REV / WHEEL_CIRCUMFERENCE_MM;
     
     @Override
     public void runOpMode() {
@@ -66,60 +71,48 @@ public class PowerPlayControl extends LinearOpMode {
         frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
         frontRight = hardwareMap.get(DcMotor.class, "frontRight");
         
-        armPitch = hardwareMap.get(DcMotor.class, "armPitch");
-        thumb = hardwareMap.get(Servo.class, "thumb");
+        //armPitch = hardwareMap.get(DcMotor.class, "armPitch");
+        //thumb = hardwareMap.get(Servo.class, "thumb");
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         // Wait for the game to start (driver presses PLAY)
+        
+        backLeft.setDirection(DcMotor.Direction.REVERSE);
+        frontLeft.setDirection(DcMotor.Direction.REVERSE);
+        
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        
+        int leftTarget = (int)(610 * COUNTS_PER_MM); //2 feet
+        int rightTarget = (int)(610 * COUNTS_PER_MM);
+        
         waitForStart();
         
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeft.setTargetPosition(leftTarget);
+        frontLeft.setTargetPosition(leftTarget);
+        backRight.setTargetPosition(rightTarget);
+        frontRight.setTargetPosition(rightTarget);
         
-        // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
+        backLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        
+        // backLeft.setPower(0.5);
+        // frontLeft.setPower(0.5);
+        // backRight.setPower(0.5);
+        // frontRight.setPower(0.5);
+        
+        // opModeIsActive runs until the end of the match (driver presses STOP)
+        while (opModeIsActive() && (backLeft.isBusy() && frontLeft.isBusy() && backRight.isBusy() && frontRight.isBusy())) {
             telemetry.addData("Status", "Running");
-
-            double y = -gamepad1.left_stick_y; // Remember, this is reversed!
-            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x; //Need gamepad1 statement?
-
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio, but only when
-            // at least one is out of the range [-1, 1]
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = (y + x + rx) / denominator;
-            double backLeftPower = (y - x + rx) / denominator;
-            double frontRightPower = (y - x - rx) / denominator;
-            double backRightPower = (y + x - rx) / denominator;
-
-            frontLeft.setPower(frontLeftPower*drivePower);
-            backLeft.setPower(backLeftPower*drivePower);
-            frontRight.setPower(frontRightPower*drivePower);
-            backRight.setPower(backRightPower*drivePower);
-            
-            
-            
-            if (this.gamepad1.left_bumper) { //Need "this"?
-                armPitch.setPower(pitchPower);
-                telemetry.addData("Arm moving", "Down");
-            } else if (this.gamepad1.right_bumper){
-                armPitch.setPower(-pitchPower);
-                telemetry.addData("Arm moving", "Up");
-            } else {
-                pulley.setPower(0);
-                telemetry.addData("Pully moving", "Stopped");
-            }
-            
-            if (this.gamepad1.right_trigger > 0.0) {
-                thumb.setPosition(1.0);
-                telemetry.addData("Thumb", "Open");
-            } else if (this.gamepad1.left_trigger > 0.0) {
-                thumb.setPosition(0.0);
-                telemetry.addData("Thumb", "Closed");
-            }
-            
+            telemetry.addData("backLeft", backLeft.getCurrentPosition());
+            telemetry.addData("frontLeft", frontLeft.getCurrentPosition());
+            telemetry.addData("backRight", backRight.getCurrentPosition());
+            telemetry.addData("frontRight", frontRight.getCurrentPosition());
             telemetry.update();
         }
     }
