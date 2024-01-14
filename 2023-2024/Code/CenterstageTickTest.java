@@ -47,10 +47,10 @@ import com.qualcomm.robotcore.hardware.Gyroscope;
 public class CenterstageTickTest extends LinearOpMode {
     private Blinker control_Hub;
     private Blinker expansion_Hub;
-    private DcMotor backLeft;
-    private DcMotor backRight;
-    private DcMotor frontLeft;
-    private DcMotor frontRight;
+    private DcMotorEx backLeft;
+    private DcMotorEx backRight;
+    private DcMotorEx frontLeft;
+    private DcMotorEx frontRight;
     //private DcMotor armPitch;
     //private Servo thumb;
     
@@ -66,10 +66,10 @@ public class CenterstageTickTest extends LinearOpMode {
         control_Hub = hardwareMap.get(Blinker.class, "Control Hub");
         expansion_Hub = hardwareMap.get(Blinker.class, "Expansion Hub");
         
-        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
-        backRight = hardwareMap.get(DcMotor.class, "backRight");
-        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
-        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
+        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
+        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
         
         //armPitch = hardwareMap.get(DcMotor.class, "armPitch");
         //thumb = hardwareMap.get(Servo.class, "thumb");
@@ -86,25 +86,37 @@ public class CenterstageTickTest extends LinearOpMode {
         backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         
-        int leftTarget = (int)(610 * COUNTS_PER_MM); //2 feet
-        int rightTarget = (int)(610 * COUNTS_PER_MM);
+        int BL_Target = (int)(610 * COUNTS_PER_MM); //2 feet
+        int FL_Target = (int)(610 * COUNTS_PER_MM);
+        int BR_Target = (int)(610 * COUNTS_PER_MM); 
+        int FR_Target = (int)(610 * COUNTS_PER_MM);
+
+        double BL_TPS = (175/ 60) * COUNTS_PER_WHEEL_REV;         
+        double FL_TPS = (175/ 60) * COUNTS_PER_WHEEL_REV;
+        double BR_TPS = (175/ 60) * COUNTS_PER_WHEEL_REV;         
+        double FR_TPS = (175/ 60) * COUNTS_PER_WHEEL_REV;
         
         waitForStart();
         
-        backLeft.setTargetPosition(leftTarget);
-        frontLeft.setTargetPosition(leftTarget);
-        backRight.setTargetPosition(rightTarget);
-        frontRight.setTargetPosition(rightTarget);
+        backLeft.setTargetPosition(BL_Target);
+        frontLeft.setTargetPosition(FL_Target);
+        backRight.setTargetPosition(BR_Target);
+        frontRight.setTargetPosition(FR_Target);
         
         backLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        backLeft.setVelocity(BL_TPS);
+        frontLeft.setVelocity(FL_TPS);
+        backRight.setVelocity(BR_TPS);
+        frontRight.setVelocity(FR_TPS);
         
-        backLeft.setPower(0.5);
-        frontLeft.setPower(0.5);
-        backRight.setPower(0.5);
-        frontRight.setPower(0.5);
+        // backLeft.setPower(0.5);
+        // frontLeft.setPower(0.5);
+        // backRight.setPower(0.5);
+        // frontRight.setPower(0.5);
         
         // opModeIsActive runs until the end of the match (driver presses STOP)
         while (opModeIsActive() && (backLeft.isBusy() && frontLeft.isBusy() && backRight.isBusy() && frontRight.isBusy())) {
@@ -115,5 +127,10 @@ public class CenterstageTickTest extends LinearOpMode {
             telemetry.addData("frontRight", frontRight.getCurrentPosition());
             telemetry.update();
         }
+
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 }
