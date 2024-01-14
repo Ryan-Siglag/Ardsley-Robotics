@@ -1,5 +1,5 @@
 /*
-Copyright 2022 FIRST Tech Challenge Team 10870
+Copyright 2023 FIRST Tech Challenge Team 10870
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -44,7 +44,7 @@ import com.qualcomm.robotcore.hardware.Gyroscope;
  */
 @Autonomous
 
-public class PowerPlayAutoTicks extends LinearOpMode {
+public class CenterstageTickTest extends LinearOpMode {
     private Blinker control_Hub;
     private Blinker expansion_Hub;
     private DcMotor backLeft;
@@ -101,10 +101,10 @@ public class PowerPlayAutoTicks extends LinearOpMode {
         backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         
-        // backLeft.setPower(0.5);
-        // frontLeft.setPower(0.5);
-        // backRight.setPower(0.5);
-        // frontRight.setPower(0.5);
+        backLeft.setPower(0.5);
+        frontLeft.setPower(0.5);
+        backRight.setPower(0.5);
+        frontRight.setPower(0.5);
         
         // opModeIsActive runs until the end of the match (driver presses STOP)
         while (opModeIsActive() && (backLeft.isBusy() && frontLeft.isBusy() && backRight.isBusy() && frontRight.isBusy())) {
