@@ -52,6 +52,7 @@ public class PowerPlayControl extends LinearOpMode {
     private DcMotor frontRight; //e
     private DcMotor armPitch; //c
     private Servo thumb; //c
+    private Servo launcher; //c //add
     
     double drivePower = 0.7;
     double pitchPower = 0.3;
@@ -68,6 +69,7 @@ public class PowerPlayControl extends LinearOpMode {
         
         armPitch = hardwareMap.get(DcMotor.class, "armPitch");
         thumb = hardwareMap.get(Servo.class, "thumb");
+        launcher = hardwareMap.get(Servo.class, "launcher");
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();

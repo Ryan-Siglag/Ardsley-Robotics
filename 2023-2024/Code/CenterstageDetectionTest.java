@@ -57,19 +57,21 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
  
 @Autonomous
 
-public class PowerPlayAutoDetection extends LinearOpMode {
+public class CenterstageDetectionTest extends LinearOpMode {
     
-    private Blinker expansion_Hub_1;
-    private Blinker expansion_Hub_2;
-    private DcMotor backLeft;
-    private DcMotor backRight;
-    private DcMotor frontLeft;
-    private DcMotor frontRight;
+    private Blinker control_Hub;
+    private Blinker expansion_Hub;
+    private DcMotorEx backLeft;
+    private DcMotorEx backRight;
+    private DcMotorEx frontLeft;
+    private DcMotorEx frontRight;
+    //private DcMotor armPitch;
+    //private Servo thumb;
     
     private ElapsedTime
     runtime = new ElapsedTime();
     
-    // int zone;
+    int zone = 1; //add
     
     /*
      * Specify the source for the Tensor Flow Model.
@@ -78,7 +80,7 @@ public class PowerPlayAutoDetection extends LinearOpMode {
      * has been downloaded to the Robot Controller's SD FLASH memory, it must to be loaded using loadModelFromFile()
      * Here we assume it's an Asset.    Also see method initTfod() below .
      */
-    private static final String TFOD_MODEL_ASSET = "powerplayv2.tflite";
+    private static final String TFOD_MODEL_ASSET = "powerplayv2.tflite"; //CHANGE
     // private static final String TFOD_MODEL_FILE  = "/sdcard/FIRST/tflitemodels/CustomTeamModel.tflite";
 
 
@@ -181,24 +183,45 @@ public class PowerPlayAutoDetection extends LinearOpMode {
 
                         // step through the list of recognitions and display image position/size information for each one
                         // Note: "Image number" refers to the randomized image orientation/number
+
+                        //Add:
+                        Recognition bestRecognition = updatedRecognitions.get(0);
+                        for (int i = 0; i < updatedRecognitions.size(); i++){
+                            if (updatedRecognitions.get(i).getConfidence()  > bestRecognition.getConfidence()){
+                                bestRecognition = updatedRecognitions.get(i);
+                            }
+                        }
+
                         for (Recognition recognition : updatedRecognitions) {
                             double col = (recognition.getLeft() + recognition.getRight()) / 2 ;
                             double row = (recognition.getTop()  + recognition.getBottom()) / 2 ;
                             double width  = Math.abs(recognition.getRight() - recognition.getLeft()) ;
                             double height = Math.abs(recognition.getTop()  - recognition.getBottom()) ;
                             
-                            // if (recognition.getLabel() == "pink") {
-                            //     zone = 1;
-                            // } else if (recognition.getLabel() == "blue") {
-                            //     zone = 3;
-                            // }
-                            
                             telemetry.addData(""," ");
+                            telemetry.addData("Best", recognition == bestRecognition); //Add
+
+                            //Add:
+                            if (recognition == bestRecognition){
+                                if (col < 200) {
+                                    zone = 0;
+                                } 
+                                else if (col < 400) {
+                                    zone = 1;
+                                }
+                                else {
+                                    zone = 2;
+                                }
+                                telemetry.addData("Zone", zone);
+                            }
+                            
                             telemetry.addData("Image", "%s (%.0f %% Conf.)", recognition.getLabel(), recognition.getConfidence() * 100 );
                             telemetry.addData("- Position (Row/Col)","%.0f / %.0f", row, col);
                             telemetry.addData("- Size (Width/Height)","%.0f / %.0f", width, height);
                             telemetry.update();
                         }
+
+                        
                         
                         // if (zone != 1 && zone != 3){
                         //     zone = 2;
