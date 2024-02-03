@@ -42,7 +42,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.tfod.TfodProcessor;
-
+import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.List;
 
 /*
@@ -54,7 +54,7 @@ import java.util.List;
  */
 @Autonomous(name = "Concept: TensorFlow Object Detection", group = "Concept")
 
-public class TeleopTest extends LinearOpMode {
+public class ATeleopTest extends LinearOpMode {
     
     private Blinker control_Hub;
     private Blinker expansion_Hub;
@@ -64,6 +64,9 @@ public class TeleopTest extends LinearOpMode {
     private DcMotorEx frontRight;
     private DcMotor armPitch;
     private Servo thumb;
+
+    private ElapsedTime
+    runtime = new ElapsedTime();
     
     private static final String TFOD_MODEL_FILE = "cts.tflite"; 
     // private static final String TFOD_MODEL_FILE  = "/sdcard/FIRST/tflitemodels/CustomTeamModel.tflite";
@@ -127,14 +130,14 @@ public class TeleopTest extends LinearOpMode {
         
        
         
-        if (opModeIsActive()) {
+        if (opModeIsActive() && runtime.seconds() <= 2) {
             while (opModeIsActive()) {
 
                 telemetryTfod();
 
                 // Push telemetry to the Driver Station.
                 telemetry.update();
-
+                    
                 // Save CPU resources; can resume streaming when needed.
                 // if (gamepad1.dpad_down) {
                 //     visionPortal.stopStreaming();
@@ -144,118 +147,116 @@ public class TeleopTest extends LinearOpMode {
 
                 // Share the CPU.
                 //sleep(20);
-                backLeft.setDirection(DcMotor.Direction.REVERSE);
-                frontLeft.setDirection(DcMotor.Direction.REVERSE);
+            }
+        }
+
+        backLeft.setDirection(DcMotor.Direction.REVERSE);
+        frontLeft.setDirection(DcMotor.Direction.REVERSE);
+        
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        
+        
+        double BL_TPS = (175.0/ 60) * COUNTS_PER_WHEEL_REV * SPEED_MULT;         
+        double FL_TPS = (175.0/ 60) * COUNTS_PER_WHEEL_REV * SPEED_MULT;
+        double BR_TPS = (175.0/ 60) * COUNTS_PER_WHEEL_REV * SPEED_MULT;         
+        double FR_TPS = (175.0/ 60) * COUNTS_PER_WHEEL_REV * SPEED_MULT;
+
+        int BL_Target = (int)(DIST_DRIVE_FWRD * COUNTS_PER_MM);
+        int FL_Target = (int)(DIST_DRIVE_FWRD * COUNTS_PER_MM);
+        int BR_Target = (int)(DIST_DRIVE_FWRD * COUNTS_PER_MM); 
+        int FR_Target = (int)(DIST_DRIVE_FWRD * COUNTS_PER_MM);
+
+        //waitForStart();
+        
+        backLeft.setVelocity(BL_TPS);
+        frontLeft.setVelocity(FL_TPS);
+        backRight.setVelocity(BR_TPS);
+        frontRight.setVelocity(FR_TPS);
+
+        backLeft.setTargetPosition(BL_Target);
+        frontLeft.setTargetPosition(FL_Target);
+        backRight.setTargetPosition(BR_Target);
+        frontRight.setTargetPosition(FR_Target);
+        
+        backLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        
+        // opModeIsActive runs until the end of the match (driver presses STOP)
+        while (opModeIsActive() && (backLeft.isBusy() && frontLeft.isBusy() && backRight.isBusy() && frontRight.isBusy())) {
+            telemetry.addData("Status", "Running");
+            telemetry.addData("backLeft", backLeft.getCurrentPosition());
+            telemetry.addData("frontLeft", frontLeft.getCurrentPosition());
+            telemetry.addData("backRight", backRight.getCurrentPosition());
+            telemetry.addData("frontRight", frontRight.getCurrentPosition());
+            telemetry.update();
+        }
+
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+
+        if (zone == 0){
+            //Left
+            frontLeft.setDirection(DcMotor.Direction.FORWARD);
+            backRight.setDirection(DcMotor.Direction.REVERSE);
+
+            BL_Target = (int)(SHIFT_LEFT * COUNTS_PER_MM);
+            FL_Target = (int)(SHIFT_LEFT * COUNTS_PER_MM);
+            BR_Target = (int)(SHIFT_LEFT * COUNTS_PER_MM); 
+            FR_Target = (int)(SHIFT_LEFT * COUNTS_PER_MM);
+        }
+        else if (zone == 1){
+            //forward
+
+            BL_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
+            FL_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
+            BR_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM); 
+            FR_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
+        }
+        else {
+            //right
+            backLeft.setDirection(DcMotor.Direction.FORWARD);
+            frontRight.setDirection(DcMotor.Direction.REVERSE);
+
+            BL_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
+            FL_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
+            BR_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM); 
+            FR_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
+        }
+
+        backLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // opModeIsActive runs until the end of the match (driver presses STOP)
+        while (opModeIsActive() && (backLeft.isBusy() && frontLeft.isBusy() && backRight.isBusy() && frontRight.isBusy())) {
+            telemetry.addData("Status", "Running");
+            telemetry.addData("targetZone", zone);
+            telemetry.addData("backLeft", backLeft.getCurrentPosition());
+            telemetry.addData("frontLeft", frontLeft.getCurrentPosition());
+            telemetry.addData("backRight", backRight.getCurrentPosition());
+            telemetry.addData("frontRight", frontRight.getCurrentPosition());
+            telemetry.update();
+        }
+
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        
+                    
                 
-                backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                
-                //Add:
-                double BL_TPS = (175.0/ 60) * COUNTS_PER_WHEEL_REV * SPEED_MULT;         
-                double FL_TPS = (175.0/ 60) * COUNTS_PER_WHEEL_REV * SPEED_MULT;
-                double BR_TPS = (175.0/ 60) * COUNTS_PER_WHEEL_REV * SPEED_MULT;         
-                double FR_TPS = (175.0/ 60) * COUNTS_PER_WHEEL_REV * SPEED_MULT;
-        
-                int BL_Target = (int)(DIST_DRIVE_FWRD * COUNTS_PER_MM);
-                int FL_Target = (int)(DIST_DRIVE_FWRD * COUNTS_PER_MM);
-                int BR_Target = (int)(DIST_DRIVE_FWRD * COUNTS_PER_MM); 
-                int FR_Target = (int)(DIST_DRIVE_FWRD * COUNTS_PER_MM);
-        
-                waitForStart();
-                
-                backLeft.setVelocity(BL_TPS);
-                frontLeft.setVelocity(FL_TPS);
-                backRight.setVelocity(BR_TPS);
-                frontRight.setVelocity(FR_TPS);
-        
-                backLeft.setTargetPosition(BL_Target);
-                frontLeft.setTargetPosition(FL_Target);
-                backRight.setTargetPosition(BR_Target);
-                frontRight.setTargetPosition(FR_Target);
-                
-                backLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        
-                // backLeft.setPower(0.5);
-                // frontLeft.setPower(0.5);
-                // backRight.setPower(0.5);
-                // frontRight.setPower(0.5);
-                
-                // opModeIsActive runs until the end of the match (driver presses STOP)
-                while (opModeIsActive() && (backLeft.isBusy() && frontLeft.isBusy() && backRight.isBusy() && frontRight.isBusy())) {
-                    telemetry.addData("Status", "Running");
-                    telemetry.addData("backLeft", backLeft.getCurrentPosition());
-                    telemetry.addData("frontLeft", frontLeft.getCurrentPosition());
-                    telemetry.addData("backRight", backRight.getCurrentPosition());
-                    telemetry.addData("frontRight", frontRight.getCurrentPosition());
-                    telemetry.update();
-                }
-        
-                backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        
-        
-                //Add all below:
-                if (zone == 0){
-                    //Left
-                    frontLeft.setDirection(DcMotor.Direction.FORWARD);
-                    backRight.setDirection(DcMotor.Direction.REVERSE);
-        
-                    BL_Target = (int)(SHIFT_LEFT * COUNTS_PER_MM);
-                    FL_Target = (int)(SHIFT_LEFT * COUNTS_PER_MM);
-                    BR_Target = (int)(SHIFT_LEFT * COUNTS_PER_MM); 
-                    FR_Target = (int)(SHIFT_LEFT * COUNTS_PER_MM);
-                }
-                else if (zone == 1){
-                    //forward
-        
-                    BL_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
-                    FL_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
-                    BR_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM); 
-                    FR_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
-                }
-                else {
-                    //right
-                    backLeft.setDirection(DcMotor.Direction.FORWARD);
-                    frontRight.setDirection(DcMotor.Direction.REVERSE);
-        
-                    BL_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
-                    FL_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
-                    BR_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM); 
-                    FR_Target = (int)(SHIFT_FWRD * COUNTS_PER_MM);
-                }
-        
-                backLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                frontLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                backRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                frontRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        
-                // opModeIsActive runs until the end of the match (driver presses STOP)
-                while (opModeIsActive() && (backLeft.isBusy() && frontLeft.isBusy() && backRight.isBusy() && frontRight.isBusy())) {
-                    telemetry.addData("Status", "Running");
-                    telemetry.addData("backLeft", backLeft.getCurrentPosition());
-                    telemetry.addData("frontLeft", frontLeft.getCurrentPosition());
-                    telemetry.addData("backRight", backRight.getCurrentPosition());
-                    telemetry.addData("frontRight", frontRight.getCurrentPosition());
-                    telemetry.update();
-                }
-        
-                backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        
-                    }
-                }
 
         // Save more CPU resources when camera is no longer needed.
-        visionPortal.close();
+        //visionPortal.close();
 
     }   // end runOpMode()
 
